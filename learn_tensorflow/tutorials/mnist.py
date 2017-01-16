@@ -1,5 +1,7 @@
 import tensorflow as tf
+import os
 from tensorflow.examples.tutorials.mnist import input_data
+
 
 def mnist_simple():
     x = tf.placeholder(dtype=tf.float32, shape=[None, 28*28])
@@ -19,7 +21,7 @@ def mnist_simple():
     session = tf.Session()
     session.run(tf.global_variables_initializer())
 
-    mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
+    mnist = input_data.read_data_sets(os.expanduser('~/MNIST_data'), one_hot=True)
 
     for i in range(1000):
         batch = mnist.train.next_batch(100)
@@ -88,7 +90,7 @@ def mnist_conv():
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
 
     config = tf.ConfigProto(
-        device_count={'GPU': 1}
+        device_count={'GPU': 0}
     )
 
     session = tf.Session(config=config)
@@ -96,6 +98,7 @@ def mnist_conv():
 
     mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
 
+    st = time.time()
     for i in range(20000):
         batch = mnist.train.next_batch(50)
 
@@ -103,7 +106,8 @@ def mnist_conv():
             train_accuracy = session.run(
                 accuracy,
                 feed_dict={x:batch[0], labels: batch[1], keep_probabilities: 1.0})
-            print("step %d, training accuracy %g"%(i, train_accuracy))
+            print("step %d, training accuracy %g, dt=%ss"%(i, train_accuracy, time.time() - st))
+            st = time.time()
         session.run(train_step, feed_dict={x: batch[0], labels: batch[1], keep_probabilities: 0.5})
 
     print("test accuracy %g" % session.run(accuracy, feed_dict={
@@ -120,7 +124,5 @@ if __name__ == '__main__':
     CPU:
     test accuracy 0.9926
     1818.77772021
-
     GPU:
-    
     '''
