@@ -21,7 +21,7 @@ def mnist_simple():
     session = tf.Session()
     session.run(tf.global_variables_initializer())
 
-    mnist = input_data.read_data_sets(os.expanduser('~/MNIST_data'), one_hot=True)
+    mnist = input_data.read_data_sets(os.path.expanduser('~/MNIST_data'), one_hot=True)
 
     for i in range(1000):
         batch = mnist.train.next_batch(100)
@@ -96,7 +96,7 @@ def mnist_conv():
     session = tf.Session(config=config)
     session.run(tf.global_variables_initializer())
 
-    mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
+    mnist = input_data.read_data_sets(os.path.expanduser('~/MNIST_data'), one_hot=True)
 
     st = time.time()
     for i in range(20000):
