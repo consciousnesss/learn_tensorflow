@@ -26,15 +26,44 @@ def main(unused_argv):
     feature_columns = [tf.contrib.layers.real_valued_column("", dimension=4)]
 
     # Build 3 layer DNN with 10, 20, 10 units respectively.
-    classifier = tf.contrib.learn.DNNClassifier(feature_columns=feature_columns,
-                                                hidden_units=[10, 20, 10],
-                                                n_classes=3,
-                                                model_dir="/tmp/iris_model")
+    classifier = tf.contrib.learn.DNNClassifier(
+        feature_columns=feature_columns,
+        hidden_units=[10, 20, 10],
+        n_classes=3,
+        model_dir="/tmp/iris_model",
+        config=tf.contrib.learn.RunConfig(save_checkpoints_secs=1)
+    )
+
+    validation_metrics = {
+        "accuracy":
+            tf.contrib.learn.metric_spec.MetricSpec(
+                metric_fn=tf.contrib.metrics.streaming_accuracy,
+                prediction_key=tf.contrib.learn.prediction_key.PredictionKey.CLASSES),
+        "precision":
+            tf.contrib.learn.metric_spec.MetricSpec(
+                metric_fn=tf.contrib.metrics.streaming_precision,
+                prediction_key=tf.contrib.learn.prediction_key.PredictionKey.CLASSES),
+        "recall":
+            tf.contrib.learn.metric_spec.MetricSpec(
+                metric_fn=tf.contrib.metrics.streaming_recall,
+                prediction_key=tf.contrib.learn.prediction_key.PredictionKey.CLASSES)
+    }
+
+    validation_monitor = tf.contrib.learn.monitors.ValidationMonitor(
+        test_set.data,
+        test_set.target,
+        every_n_steps=50,
+        metrics=validation_metrics,
+        early_stopping_metric="loss",
+        early_stopping_metric_minimize=True,
+        early_stopping_rounds=200
+    )
 
     # Fit model.
     classifier.fit(x=training_set.data,
                    y=training_set.target,
-                   steps=2000)
+                   steps=2000,
+                   monitors=[validation_monitor])
 
     # Evaluate accuracy.
     accuracy_score = classifier.evaluate(x=test_set.data,
@@ -49,4 +78,5 @@ def main(unused_argv):
 
 
 if __name__ == "__main__":
-  tf.app.run(main=main)
+    tf.logging.set_verbosity(tf.logging.INFO)
+    tf.app.run(main=main)
